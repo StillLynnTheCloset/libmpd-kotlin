@@ -5,6 +5,7 @@ import com.stilllynnthecloset.libmpd.api.MpdSong
 import com.stilllynnthecloset.libmpd.api.MpdStats
 import com.stilllynnthecloset.libmpd.api.MpdStatus
 import com.stilllynnthecloset.libmpd.protocol.MpdCommand
+import com.stilllynnthecloset.libmpd.protocol.MpdCommandList
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -21,4 +22,16 @@ fun main() = runBlocking {
     val result4 = connection.runCommand(MpdCommand.Commands())
     println(result4)
     println(MpdSong(result4))
+
+    val result5 = connection.runCommandList(MpdCommandList(
+        commands = listOf(
+            MpdCommand.Status(),
+            MpdCommand.Stats(),
+            MpdCommand.CurrentSong(),
+        ),
+        listOk = true,
+    ))
+    println(result5.joinToString(separator = "\n"))
+
+
 }

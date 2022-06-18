@@ -29,12 +29,12 @@ public class MpdConnection internal constructor(
 
     @Throws(MpdException::class)
     public suspend fun runCommand(command: MpdCommand): List<Pair<String, String>> {
+        if (debug) {
+            Log.debug("Opening connection to $address:$port")
+        }
         val (sink, source, socket) = openSocket(address, port)
         socket.use {
-            val protocolVersion = readVersion(source)
-            if (debug) {
-                Log.error(protocolVersion)
-            }
+            readVersion(source)
             writeCommand(command, sink)
             return readResults(source)
         }
@@ -42,10 +42,13 @@ public class MpdConnection internal constructor(
 
     @Throws(MpdException::class)
     public suspend fun runCommandList(commandList: MpdCommandList): List<Pair<String, String>> {
+        if (debug) {
+            Log.debug("Opening connection to $address:$port")
+        }
         val (sink, source, socket) = openSocket(address, port)
         socket.use {
-            val protocolVersion = readVersion(source)
-            Log.error(protocolVersion)
+            readVersion(source)
+
             val listStart = if (commandList.listOk) {
                 "command_list_ok_begin"
             } else {
@@ -69,10 +72,23 @@ public class MpdConnection internal constructor(
 
     private suspend fun readVersion(source: ByteReadChannel): MpdProtocolVersion {
         val line = source.readUTF8Line().orEmpty()
+
+        if (debug) {
+            Log.debug("Got connection OK + Version = $line")
+        }
+
         val matches = versionRegex.matchEntire(line)
-        return MpdProtocolVersion.fromVersionString(
-            matches?.groupValues?.get(1).orEmpty()
-        )
+        val match = matches?.groupValues?.get(1).orEmpty()
+
+        if (debug) {
+            Log.debug("Got protocol string = $match")
+        }
+
+        return MpdProtocolVersion.fromVersionString(match).also {
+            if (debug) {
+                Log.debug("Got protocolVersion = $it")
+            }
+        }
     }
 
     private suspend fun writeCommand(command: MpdCommand, sink: ByteWriteChannel) {
@@ -90,6 +106,10 @@ public class MpdConnection internal constructor(
         var value: String
         do {
             line = source.readUTF8Line().orEmpty()
+
+            if (debug) {
+                Log.debug("Read line `$line`")
+            }
             if (line.startsWith("ACK")) {
                 throw MpdException(line)
             }
