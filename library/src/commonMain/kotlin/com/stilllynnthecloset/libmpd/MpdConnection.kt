@@ -1,19 +1,23 @@
-package com.stilllynnthecloset.libmpd.platform
+package com.stilllynnthecloset.libmpd
 
+import com.stilllynnthecloset.libmpd.platform.Log
 import com.stilllynnthecloset.libmpd.protocol.MpdCommand
 import com.stilllynnthecloset.libmpd.protocol.MpdCommandList
 import com.stilllynnthecloset.libmpd.protocol.MpdException
 import com.stilllynnthecloset.libmpd.protocol.MpdProtocolVersion
-import okio.BufferedSink
-import okio.BufferedSource
-import okio.buffer
-import okio.sink
-import okio.source
-import okio.use
-import java.net.InetAddress
-import java.net.Socket
+import io.ktor.network.selector.SelectorManager
+import io.ktor.network.sockets.Socket
+import io.ktor.network.sockets.aSocket
+import io.ktor.network.sockets.openReadChannel
+import io.ktor.network.sockets.openWriteChannel
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.ByteWriteChannel
+import io.ktor.utils.io.core.use
+import io.ktor.utils.io.readUTF8Line
+import io.ktor.utils.io.writeStringUtf8
+import kotlinx.coroutines.Dispatchers
 
-public actual class MpdConnection internal actual constructor(
+public class MpdConnection internal constructor(
     private val address: String,
     private val port: Int,
     private val debug: Boolean,
@@ -21,9 +25,10 @@ public actual class MpdConnection internal actual constructor(
     private companion object {
         private val versionRegex = Regex("OK MPD (.*)")
     }
+    private val selectorManager = SelectorManager(Dispatchers.Default) // Can't Use IO since it only exists on JVM.
 
     @Throws(MpdException::class)
-    public actual fun runCommand(command: MpdCommand): List<Pair<String, String>> {
+    public suspend fun runCommand(command: MpdCommand): List<Pair<String, String>> {
         val (sink, source, socket) = openSocket(address, port)
         socket.use {
             val protocolVersion = readVersion(source)
@@ -36,7 +41,7 @@ public actual class MpdConnection internal actual constructor(
     }
 
     @Throws(MpdException::class)
-    public actual fun runCommandList(commandList: MpdCommandList): List<Pair<String, String>> {
+    public suspend fun runCommandList(commandList: MpdCommandList): List<Pair<String, String>> {
         val (sink, source, socket) = openSocket(address, port)
         socket.use {
             val protocolVersion = readVersion(source)
@@ -46,47 +51,45 @@ public actual class MpdConnection internal actual constructor(
             } else {
                 "command_list_begin"
             }
-            sink.writeUtf8("$listStart\r\n")
+            sink.writeStringUtf8("$listStart\r\n")
             commandList.commands.forEach { command ->
                 writeCommand(command, sink)
             }
-            sink.writeUtf8("command_list_end\r\n")
-            sink.flush()
+            sink.writeStringUtf8("command_list_end\r\n")
             return readResults(source)
         }
     }
 
-    private fun openSocket(address: String, port: Int): Triple<BufferedSink, BufferedSource, Socket> {
-        val inetAddress = InetAddress.getByName(address)
-        val socket = Socket(inetAddress, port)
-        val source = socket.source().buffer()
-        val sink = socket.sink().buffer()
-        return Triple(sink, source, socket)
+    private suspend fun openSocket(address: String, port: Int): Triple<ByteWriteChannel, ByteReadChannel, Socket> {
+        val socket = aSocket(selectorManager).tcp().connect(address, port)
+        val sendChannel = socket.openWriteChannel(autoFlush = true)
+        val receiveChannel = socket.openReadChannel()
+        return Triple(sendChannel, receiveChannel, socket)
     }
 
-    private fun readVersion(source: BufferedSource): MpdProtocolVersion {
-        val line = source.readUtf8LineStrict()
+    private suspend fun readVersion(source: ByteReadChannel): MpdProtocolVersion {
+        val line = source.readUTF8Line().orEmpty()
         val matches = versionRegex.matchEntire(line)
         return MpdProtocolVersion.fromVersionString(
             matches?.groupValues?.get(1).orEmpty()
         )
     }
 
-    private fun writeCommand(command: MpdCommand, sink: BufferedSink) {
+    private suspend fun writeCommand(command: MpdCommand, sink: ByteWriteChannel) {
         val toRun = command.commandString()
         if (debug) {
-            Log.error("Writing `$toRun`")
+            Log.debug("Writing `$toRun`")
         }
-        sink.writeUtf8("$toRun\r\n").flush()
+        sink.writeStringUtf8("$toRun\r\n")
     }
 
-    private fun readResults(source: BufferedSource): List<Pair<String, String>> {
+    private suspend fun readResults(source: ByteReadChannel): List<Pair<String, String>> {
         val results: MutableList<Pair<String, String>> = mutableListOf()
         var line: String
         var key: String
         var value: String
         do {
-            line = source.readUtf8LineStrict()
+            line = source.readUTF8Line().orEmpty()
             if (line.startsWith("ACK")) {
                 throw MpdException(line)
             }
@@ -100,7 +103,7 @@ public actual class MpdConnection internal actual constructor(
             }
             if (key == "binary") {
                 // Read the next $value bytes into a buffer
-                source.readByteArray(value.toLong())
+                source.readPacket(value.toInt())
             }
         } while (!(line == "OK" || line.startsWith("ACK")))
 

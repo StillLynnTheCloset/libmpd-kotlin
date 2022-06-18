@@ -1,7 +1,5 @@
 package com.stilllynnthecloset.libmpd
 
-import com.stilllynnthecloset.libmpd.platform.MpdConnection
-
 public object LibMpd {
     public fun getConnection(
         address: String = "localhost",

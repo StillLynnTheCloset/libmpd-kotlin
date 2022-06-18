@@ -14,6 +14,8 @@ repositories {
     maven { setUrl("https://jitpack.io") }
 }
 
+val ktor_version = "2.0.2"
+
 kotlin {
     explicitApi()
     jvm {
@@ -39,8 +41,8 @@ kotlin {
                 implementation("org.jetbrains.kotlin:kotlin-stdlib")
 //                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.3")
 //                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
-//                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-M1")
-                //    implementation("io.ktor:ktor-network:$ktor_version")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
+                implementation("io.ktor:ktor-network:$ktor_version")
             }
         }
         val commonTest by getting {

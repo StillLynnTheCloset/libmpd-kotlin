@@ -5,8 +5,9 @@ import com.stilllynnthecloset.libmpd.api.MpdSong
 import com.stilllynnthecloset.libmpd.api.MpdStats
 import com.stilllynnthecloset.libmpd.api.MpdStatus
 import com.stilllynnthecloset.libmpd.protocol.MpdCommand
+import kotlinx.coroutines.runBlocking
 
-fun main() {
+fun main() = runBlocking {
     val connection = LibMpd.getConnection(debug = true)
     val result = connection.runCommand(MpdCommand.Status())
     println(result)
