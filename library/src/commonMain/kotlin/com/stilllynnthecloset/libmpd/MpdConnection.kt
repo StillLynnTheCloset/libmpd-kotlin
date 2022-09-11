@@ -3,6 +3,7 @@ package com.stilllynnthecloset.libmpd
 import com.stilllynnthecloset.libmpd.platform.Log
 import com.stilllynnthecloset.libmpd.protocol.MpdCommand
 import com.stilllynnthecloset.libmpd.protocol.MpdCommandList
+import com.stilllynnthecloset.libmpd.protocol.MpdCommandResult
 import com.stilllynnthecloset.libmpd.protocol.MpdException
 import com.stilllynnthecloset.libmpd.protocol.MpdProtocolVersion
 import io.ktor.network.selector.SelectorManager
@@ -25,23 +26,59 @@ public class MpdConnection internal constructor(
     private companion object {
         private val versionRegex = Regex("OK MPD (.*)")
     }
+
     private val selectorManager = SelectorManager(Dispatchers.Default) // Can't Use IO since it only exists on JVM.
 
     @Throws(MpdException::class)
-    public suspend fun runCommand(command: MpdCommand): List<Pair<String, String>> {
+    public suspend fun <T : MpdCommandResult> runCommand(command: MpdCommand<T>): T {
+        if (debug) {
+            Log.debug("Opening connection to $address:$port")
+        }
+        val (sink, source, socket) = openSocket(address, port)
+        socket.use {
+            val version = readVersion(source)
+            if (version < command.minMpdProtocolVersion) {
+                throw MpdException("Command not supported")
+            }
+            writeCommand(command, sink)
+            return command.parseResult(readResults(source))
+        }
+    }
+
+    @Throws(MpdException::class)
+    public suspend fun runCommandList(commands: List<MpdCommand<*>>): List<MpdCommandResult> {
         if (debug) {
             Log.debug("Opening connection to $address:$port")
         }
         val (sink, source, socket) = openSocket(address, port)
         socket.use {
             readVersion(source)
-            writeCommand(command, sink)
-            return readResults(source)
+
+            return commands.map { command ->
+                writeCommand(command, sink)
+                command.parseResult(readResults(source))
+            }
         }
     }
 
     @Throws(MpdException::class)
-    public suspend fun runCommandList(commandList: MpdCommandList): List<Pair<String, String>> {
+    public suspend fun runCommandList(vararg commands: MpdCommand<*>): List<MpdCommandResult> {
+        if (debug) {
+            Log.debug("Opening connection to $address:$port")
+        }
+        val (sink, source, socket) = openSocket(address, port)
+        socket.use {
+            readVersion(source)
+
+            return commands.map { command ->
+                writeCommand(command, sink)
+                command.parseResult(readResults(source))
+            }
+        }
+    }
+
+    @Throws(MpdException::class)
+    public suspend fun runCommandList(commandList: MpdCommandList): MpdCommandResult.CommandListResult {
         if (debug) {
             Log.debug("Opening connection to $address:$port")
         }
@@ -59,7 +96,7 @@ public class MpdConnection internal constructor(
                 writeCommand(command, sink)
             }
             sink.writeStringUtf8("command_list_end\r\n")
-            return readResults(source)
+            return MpdCommandResult.CommandListResult(readResults(source))
         }
     }
 
@@ -91,7 +128,7 @@ public class MpdConnection internal constructor(
         }
     }
 
-    private suspend fun writeCommand(command: MpdCommand, sink: ByteWriteChannel) {
+    private suspend fun writeCommand(command: MpdCommand<*>, sink: ByteWriteChannel) {
         val toRun = command.commandString()
         if (debug) {
             Log.debug("Writing `$toRun`")

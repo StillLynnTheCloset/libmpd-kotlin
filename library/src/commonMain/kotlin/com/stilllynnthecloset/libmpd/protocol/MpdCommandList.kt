@@ -14,7 +14,7 @@ import com.stilllynnthecloset.libmpd.MpdObject
  * @see {https://www.musicpd.org/doc/html/protocol.html#command-lists}
  */
 public data class MpdCommandList constructor(
-    val commands: List<MpdCommand>,
+    val commands: List<MpdCommand<*>>,
     val listOk: Boolean = false,
 ) : MpdObject {
     override val minMpdProtocolVersion: MpdProtocolVersion = MpdProtocolVersion.Protocol1
