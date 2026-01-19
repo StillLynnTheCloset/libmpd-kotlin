@@ -3,8 +3,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.kotlin.kapt)
 }
 
 val versionPropertiesFile = System.getenv("APP_VERSION_PROPERTIES")?.let { FileInputStream(it) } ?: FileInputStream(rootProject.file("app-version.properties"))
@@ -18,8 +16,6 @@ val build = System.getenv("APP_VERSION_BUILD") ?: versionProperties["APP_VERSION
 
 group = "com.stilllynnthecloset"
 version = "$major.$minor.$patch-$build"
-
-val artifact = "libmpd-kotlin"
 
 kotlin {
     explicitApi()
@@ -40,7 +36,6 @@ kotlin {
             // put your Multiplatform dependencies here
             implementation(libs.kotlin.stdlib)
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.kotlinx.serialization.json)
             implementation("io.ktor:ktor-client-core:3.3.3")
             implementation("io.ktor:ktor-client-cio:3.3.3")
         }
