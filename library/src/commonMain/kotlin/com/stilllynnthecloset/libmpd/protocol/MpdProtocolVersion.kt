@@ -11,6 +11,7 @@ public enum class MpdProtocolVersion constructor(
     Protocol21("0.21"),
     Protocol22("0.22"),
     Protocol23("0.23"),
+    Protocol24("0.24"),
     ;
 
     internal companion object {
