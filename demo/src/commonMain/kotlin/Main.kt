@@ -1,16 +1,22 @@
-package com.stilllynnthecloset.libmpd.demo
+// Can't have a package for kotlin/native main() function
 
 import com.stilllynnthecloset.libmpd.LibMpd
 import com.stilllynnthecloset.libmpd.protocol.MpdCommand
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
-fun main() = runBlocking {
+public fun main(): Unit = runBlocking {
     val connection = LibMpd.getConnection(debug = false)
 
     println(connection.runCommand(MpdCommand.Status()))
     println(connection.runCommand(MpdCommand.Stats()))
     println(connection.runCommand(MpdCommand.CurrentSong()))
     println(connection.runCommand(MpdCommand.Commands()))
+
+    while (true) {
+        println(connection.runCommand(MpdCommand.Status()))
+        delay(1000)
+    }
 
 //    val result5 = connection.runCommandList(MpdCommandList(
 //        commands = listOf(
@@ -29,5 +35,4 @@ fun main() = runBlocking {
 //        MpdCommand.Commands(),
 //    )
 //    println(result6.joinToString(separator = "\n"))
-
 }

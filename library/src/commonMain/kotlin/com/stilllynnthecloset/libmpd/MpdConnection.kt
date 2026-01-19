@@ -14,9 +14,11 @@ import io.ktor.network.sockets.openWriteChannel
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.ByteWriteChannel
 import io.ktor.utils.io.core.use
+import io.ktor.utils.io.readPacket
 import io.ktor.utils.io.readUTF8Line
 import io.ktor.utils.io.writeStringUtf8
 import kotlinx.coroutines.Dispatchers
+import kotlin.coroutines.cancellation.CancellationException
 
 public class MpdConnection internal constructor(
     private val address: String,
@@ -29,7 +31,7 @@ public class MpdConnection internal constructor(
 
     private val selectorManager = SelectorManager(Dispatchers.Default) // Can't Use IO since it only exists on JVM.
 
-    @Throws(MpdException::class)
+    @Throws(MpdException::class, CancellationException::class)
     public suspend fun <T : MpdCommandResult> runCommand(command: MpdCommand<T>): T {
         if (debug) {
             Log.debug("Opening connection to $address:$port")
@@ -45,7 +47,7 @@ public class MpdConnection internal constructor(
         }
     }
 
-    @Throws(MpdException::class)
+    @Throws(MpdException::class, CancellationException::class)
     public suspend fun runCommandList(commands: List<MpdCommand<*>>): List<MpdCommandResult> {
         if (debug) {
             Log.debug("Opening connection to $address:$port")
@@ -61,7 +63,7 @@ public class MpdConnection internal constructor(
         }
     }
 
-    @Throws(MpdException::class)
+    @Throws(MpdException::class, CancellationException::class)
     public suspend fun runCommandList(vararg commands: MpdCommand<*>): List<MpdCommandResult> {
         if (debug) {
             Log.debug("Opening connection to $address:$port")
@@ -77,7 +79,7 @@ public class MpdConnection internal constructor(
         }
     }
 
-    @Throws(MpdException::class)
+    @Throws(MpdException::class, CancellationException::class)
     public suspend fun runCommandList(commandList: MpdCommandList): MpdCommandResult.CommandListResult {
         if (debug) {
             Log.debug("Opening connection to $address:$port")

@@ -1,91 +1,74 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
-    kotlin("multiplatform")
-    kotlin("plugin.serialization")
-    id("maven-publish")
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlin.kapt)
 }
 
-group = properties["GROUP"] as String
-version = properties["VERSION"] as String
-val artifact = properties["ARTIFACT"] as String
+val versionPropertiesFile = System.getenv("APP_VERSION_PROPERTIES")?.let { FileInputStream(it) } ?: FileInputStream(rootProject.file("app-version.properties"))
+val versionProperties = Properties()
+versionProperties.load(versionPropertiesFile)
 
-repositories {
-    google()
-    mavenCentral()
-    maven { setUrl("https://jitpack.io") }
-}
+val major = System.getenv("APP_VERSION_MAJOR") ?: versionProperties["APP_VERSION_MAJOR"]
+val minor = System.getenv("APP_VERSION_MINOR") ?: versionProperties["APP_VERSION_MINOR"]
+val patch = System.getenv("APP_VERSION_PATCH") ?: versionProperties["APP_VERSION_PATCH"]
+val build = System.getenv("APP_VERSION_BUILD") ?: versionProperties["APP_VERSION_BUILD"]
 
-val ktor_version = "2.0.2"
+group = "com.stilllynnthecloset"
+version = "$major.$minor.$patch-$build"
+
+val artifact = "libmpd-kotlin"
 
 kotlin {
     explicitApi()
-    jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "1.8"
-        }
-        testRuns["test"].executionTask.configure {
-            useJUnit()
-            testLogging {
-                showStandardStreams = true
-            }
-        }
-    }
+
+    jvm()
+
     js(IR) {
-        moduleName = artifact
         nodejs()
         binaries.executable()
     }
 
+    linuxX64 {
+        binaries.executable()
+    }
+
     sourceSets {
-        val commonMain by getting {
-            dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-stdlib")
-//                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.3")
-//                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
-                implementation("io.ktor:ktor-network:$ktor_version")
-            }
+        commonMain.dependencies {
+            // put your Multiplatform dependencies here
+            implementation(libs.kotlin.stdlib)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
+            implementation("io.ktor:ktor-client-core:3.3.3")
+            implementation("io.ktor:ktor-client-cio:3.3.3")
         }
-        val commonTest by getting {
-            dependencies {
-                implementation(kotlin("test-common"))
-                implementation(kotlin("test-annotations-common"))
-                implementation("junit:junit:4.12")
-            }
-        }
-        val jvmMain by getting {
-            dependencies {
-                implementation("com.squareup.okio:okio:2.10.0")
-            }
-        }
-        val jvmTest by getting {
-            dependencies {
-                implementation(kotlin("test-junit"))
-            }
-        }
-        val jsMain by getting
-        val jsTest by getting {
-            dependencies {
-                implementation(kotlin("test-js"))
-            }
+
+        commonTest.dependencies {
+            implementation("junit:junit:4.13")
+            implementation(kotlin("test-common"))
+            implementation(kotlin("test-annotations-common"))
         }
     }
 }
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = properties["GROUP"] as String
-            artifactId = properties["ARTIFACT"] as String
-            version = properties["VERSION"] as String
-            from(components["kotlin"])
-        }
-    }
-    repositories {
-        maven {
-            url = uri("https://gradle-571930944873.d.codeartifact.us-east-1.amazonaws.com/maven/lib-geoposition-utilities/")
-            this.credentials {
-                this.username = "aws"
-                this.password = System.getenv("CODEARTIFACT_AUTH_TOKEN")
-            }
-        }
-    }
-}
+
+//publishing {
+//    publications {
+//        create<MavenPublication>("maven") {
+//            groupId = properties["GROUP"] as String
+//            artifactId = properties["ARTIFACT"] as String
+//            version = properties["VERSION"] as String
+//            from(components["kotlin"])
+//        }
+//    }
+//    repositories {
+//        maven {
+//            url = uri("https://gradle-571930944873.d.codeartifact.us-east-1.amazonaws.com/maven/lib-geoposition-utilities/")
+//            this.credentials {
+//                this.username = "aws"
+//                this.password = System.getenv("CODEARTIFACT_AUTH_TOKEN")
+//            }
+//        }
+//    }
+//}

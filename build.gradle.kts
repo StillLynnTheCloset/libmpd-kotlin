@@ -1,19 +1,10 @@
 plugins {
-    kotlin("multiplatform") version "1.6.21"
-    kotlin("plugin.serialization") version "1.6.21"
-    id("maven-publish")
+    // this is necessary to avoid the plugins to be loaded multiple times
+    // in each subproject's classloader
+    alias(libs.plugins.kotlin.multiplatform) apply false
+    alias(libs.plugins.kotlin.kapt) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
 }
 
 group = "com.stilllynnthecloset"
 version = "0.0.1"
-
-repositories {
-    google()
-    mavenCentral()
-    maven { setUrl("https://jitpack.io") }
-}
-
-kotlin {
-    jvm()
-    js().nodejs()
-}

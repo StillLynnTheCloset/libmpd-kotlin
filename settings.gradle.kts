@@ -1,4 +1,4 @@
-rootProject.name = "lib-mpd-kotlin"
+rootProject.name = "libmpd-kotlin"
 
 include("library", "demo")
 
@@ -7,6 +7,12 @@ pluginManagement {
         google()
         gradlePluginPortal()
         mavenCentral()
-        maven { setUrl("https://jitpack.io") }
+    }
+}
+
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
     }
 }
