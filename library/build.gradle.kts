@@ -36,14 +36,8 @@ kotlin {
             // put your Multiplatform dependencies here
             implementation(libs.kotlin.stdlib)
             implementation(libs.kotlinx.coroutines.core)
-            implementation("io.ktor:ktor-client-core:3.3.3")
-            implementation("io.ktor:ktor-client-cio:3.3.3")
-        }
-
-        commonTest.dependencies {
-            implementation("junit:junit:4.13")
-            implementation(kotlin("test-common"))
-            implementation(kotlin("test-annotations-common"))
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.cio)
         }
     }
 }
