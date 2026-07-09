@@ -990,12 +990,19 @@ public sealed class MpdCommand<T : MpdCommandResult> : MpdObject {
      * list file was implemented in an early MPD version, but does not appear to make a lot of sense. It still
      * works (to avoid breaking compatibility), but is deprecated.
      */
-    public data class ListTags constructor(val type: MpdSongTag, val filter: MpdFilter, val group: MpdSongTag? = null) :
+    public data class ListTags constructor(val type: MpdSongTag, val filter: MpdFilter, val group: MpdSongTag? = null, val window: MpdRange? = null) :
         MpdCommand<MpdCommandResult.UnimplementedResult>() {
         override val commandKey: String = "list"
 
         override val argumentsList: List<String> =
-            listOfNotNull(type.toString(), filter.toString(), group?.let { "group $group" })
+            listOfNotNull(type.toString(), filter.toString(), group?.let { "group $group" }, window?.let { "window $window" })
+
+        override val minMpdProtocolVersion: MpdProtocolVersion
+            get() = if (window != null) {
+                MpdProtocolVersion.Protocol25
+            } else {
+                MpdProtocolVersion.Protocol1
+            }
 
         public override fun parseResult(result: List<Pair<String, String>>): MpdCommandResult.UnimplementedResult =
             MpdCommandResult.UnimplementedResult(result)
