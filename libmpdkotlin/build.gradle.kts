@@ -46,9 +46,9 @@ kotlin {
 publishing {
     publications {
         register<MavenPublication>("gpr") {
-            groupId = properties["GROUP"] as String
-            artifactId = properties["ARTIFACT"] as String
-            version = properties["VERSION"] as String
+            groupId = group as String
+            artifactId = "libmpd-kotlin"
+            version = version as String
             from(components["kotlin"])
         }
     }

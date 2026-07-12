@@ -1,6 +1,6 @@
 rootProject.name = "libmpd-kotlin"
 
-include("library", "demo")
+include("libmpdkotlin", "demo")
 
 pluginManagement {
     repositories {

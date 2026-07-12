@@ -24,7 +24,7 @@ kotlin {
             // put your Multiplatform dependencies here
             implementation(libs.kotlin.stdlib)
             implementation(libs.kotlinx.coroutines.core)
-            implementation(project(":library"))
+            implementation(project(":libmpdkotlin"))
         }
     }
 }
