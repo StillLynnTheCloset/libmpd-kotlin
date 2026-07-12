@@ -38,8 +38,8 @@ jobs:
     - name: Build with Gradle Wrapper
       run: ./gradlew :libmpdkotlin:publishAllPublicationsToGithubPackagesRepository
       env:
-        TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        USERNAME: ${{ github.triggering_actor }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_USERNAME: stilllynnthecloset
 
 #    - shell: bash
 #      run: |

@@ -49,8 +49,8 @@ publishing {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/stilllynnthecloset/libmpd-kotlin")
             credentials {
-                username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
-                password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
+                username = project.findProperty("gpr.user") as String? ?: System.getenv("GH_USERNAME")
+                password = project.findProperty("gpr.key") as String? ?: System.getenv("GH_TOKEN")
             }
         }
     }
