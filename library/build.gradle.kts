@@ -3,6 +3,7 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
+    id("maven-publish")
 }
 
 val versionPropertiesFile = System.getenv("APP_VERSION_PROPERTIES")?.let { FileInputStream(it) } ?: FileInputStream(rootProject.file("app-version.properties"))
@@ -42,22 +43,23 @@ kotlin {
     }
 }
 
-//publishing {
-//    publications {
-//        create<MavenPublication>("maven") {
-//            groupId = properties["GROUP"] as String
-//            artifactId = properties["ARTIFACT"] as String
-//            version = properties["VERSION"] as String
-//            from(components["kotlin"])
-//        }
-//    }
-//    repositories {
-//        maven {
-//            url = uri("https://gradle-571930944873.d.codeartifact.us-east-1.amazonaws.com/maven/lib-geoposition-utilities/")
-//            this.credentials {
-//                this.username = "aws"
-//                this.password = System.getenv("CODEARTIFACT_AUTH_TOKEN")
-//            }
-//        }
-//    }
-//}
+publishing {
+    publications {
+        register<MavenPublication>("gpr") {
+            groupId = properties["GROUP"] as String
+            artifactId = properties["ARTIFACT"] as String
+            version = properties["VERSION"] as String
+            from(components["kotlin"])
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/stilllynnthecloset/libmpd-kotlin")
+            credentials {
+                username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
+                password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
+            }
+        }
+    }
+}
