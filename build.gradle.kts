@@ -5,5 +5,5 @@ plugins {
     alias(libs.plugins.kotlin.kapt) apply false
 }
 
-group = "com.stilllynnthecloset"
-version = "0.0.1"
+group = project.findProperty("ARTIFACT_PACKAGE") as String
+version = project.findProperty("ARTIFACT_VERSION") as String

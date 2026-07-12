@@ -2,8 +2,10 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform)
 }
 
-group = "com.stilllynnthecloset"
-version = "0.0.1"
+
+group = properties["ARTIFACT_PACKAGE"] as String
+version = properties["ARTIFACT_VERSION"] as String
+
 kotlin {
     explicitApi()
 

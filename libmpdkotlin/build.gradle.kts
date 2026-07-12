@@ -6,17 +6,8 @@ plugins {
     id("maven-publish")
 }
 
-val versionPropertiesFile = System.getenv("APP_VERSION_PROPERTIES")?.let { FileInputStream(it) } ?: FileInputStream(rootProject.file("app-version.properties"))
-val versionProperties = Properties()
-versionProperties.load(versionPropertiesFile)
-
-val major = System.getenv("APP_VERSION_MAJOR") ?: versionProperties["APP_VERSION_MAJOR"]
-val minor = System.getenv("APP_VERSION_MINOR") ?: versionProperties["APP_VERSION_MINOR"]
-val patch = System.getenv("APP_VERSION_PATCH") ?: versionProperties["APP_VERSION_PATCH"]
-val build = System.getenv("APP_VERSION_BUILD") ?: versionProperties["APP_VERSION_BUILD"]
-
-group = "com.stilllynnthecloset"
-version = "$major.$minor.$patch-$build"
+group = project.findProperty("ARTIFACT_PACKAGE") as String
+version = project.findProperty("ARTIFACT_VERSION") as String
 
 kotlin {
     explicitApi()
@@ -46,12 +37,13 @@ kotlin {
 publishing {
     publications {
         register<MavenPublication>("gpr") {
-            groupId = group as String
-            artifactId = "libmpd-kotlin"
-            version = version as String
+            groupId = project.findProperty("ARTIFACT_PACKAGE") as String
+            artifactId = project.findProperty("ARTIFACT_NAME") as String
+            version = project.findProperty("ARTIFACT_VERSION") as String
             from(components["kotlin"])
         }
     }
+
     repositories {
         maven {
             name = "GitHubPackages"
