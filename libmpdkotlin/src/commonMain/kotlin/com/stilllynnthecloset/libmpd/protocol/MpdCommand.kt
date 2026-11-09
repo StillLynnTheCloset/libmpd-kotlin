@@ -399,14 +399,12 @@ public sealed class MpdCommand<T : MpdCommandResult> : MpdObject {
     /**
      * Seeks to the position [time] (in seconds; fractions allowed) within the current song. If prefixed by + or -,
      * then the time is relative to the current playing position.
-     *
-     * TODO: Better handle relative positions.
      */
-    public data class SeekCurrent constructor(val time: Double, val relative: Boolean = false) :
+    public data class SeekCurrent constructor(val time: Double, val relative: Boolean = true) :
         MpdCommand<MpdCommandResult.UnimplementedResult>() {
         override val commandKey: String = "seekcur"
 
-        override val argumentsList: List<String> = listOf(time.toString())
+        override val argumentsList: List<String> = listOf("${if (relative && time > 0.0)"+" else ""}$time")
 
         public override fun parseResult(result: List<Pair<String, String>>): MpdCommandResult.UnimplementedResult =
             MpdCommandResult.UnimplementedResult(result)
